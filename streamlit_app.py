@@ -11,7 +11,7 @@ import zipfile
 from openai import OpenAI
 from streamlit_chat import message
 
-API_KEY = "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" #"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"
+API_KEY = ""
 
 # Page title
 st.set_page_config(page_title='Recommender System', page_icon='🤖')
