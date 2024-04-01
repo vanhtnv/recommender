@@ -6,15 +6,20 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 import altair as alt
 import time
+from utils import get_initial_message, get_chatgpt_response, update_chat
 import zipfile
+from openai import OpenAI
+from streamlit_chat import message
+
+API_KEY = "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" #"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"
 
 # Page title
-st.set_page_config(page_title='ML Model Building', page_icon='🤖')
-st.title('🤖 ML Model Building')
-
+st.set_page_config(page_title='Recommender System', page_icon='🤖')
+st.title('🤖 Recommender System')
+    
 with st.expander('About this app'):
   st.markdown('**What can this app do?**')
-  st.info('This app allow users to build a machine learning (ML) model in an end-to-end workflow. Particularly, this encompasses data upload, data pre-processing, ML model building and post-model analysis.')
+  st.info('This app allows user to upload data.')
 
   st.markdown('**How to use the app?**')
   st.warning('To engage with the app, go to the sidebar and 1. Select a data set and 2. Adjust the model parameters by adjusting the various slider widgets. As a result, this would initiate the ML model building process, display the model results as well as allowing users to download the generated models and accompanying data.')
@@ -247,3 +252,46 @@ if uploaded_file or example_data:
 # Ask for CSV upload if none is detected
 else:
     st.warning('👈 Upload a CSV file or click *"Load example data"* to get started!')
+  
+  
+model = st.selectbox(
+    "Select a model",
+    ("gpt-3.5-turbo", "gpt-4")
+)
+client = OpenAI(api_key=API_KEY) 
+st.header("Chatbox:")
+
+if "message" not in st.session_state:
+    st.session_state.message =[]
+    
+for message in st.session_state.message:
+    with st.chat_message(message['role']):
+        st.markdown(message['content'])
+
+if prompt := st.chat_input("Message"):
+    msg = {
+        'role': 'user',
+        'content': prompt
+    }
+    
+    st.session_state.message.append(msg)
+    
+    with st.chat_message('user'):
+        st.markdown(prompt) 
+        
+    with st.chat_message('assistant'):
+        chatresponse = client.chat.completions.create(
+            model=model,
+            messages=st.session_state.message,
+            temperature=1,
+            n=1
+        )
+        response_content = chatresponse.choices[0].message.content
+        st.markdown(response_content) 
+        
+        res_msg = {
+            'role': 'assistant',
+            'content': response_content
+        }
+        st.session_state.message.append(res_msg)
+        
